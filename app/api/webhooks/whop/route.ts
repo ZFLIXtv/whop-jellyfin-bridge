@@ -7,11 +7,21 @@ import {
 } from "@/lib/webhook-events";
 import { parseWhopPayload } from "@/lib/whop";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
   let payload: any = null;
 
   try {
+    const sharedSecret = request.headers.get("x-whop-shared-secret");
+
+    if (!sharedSecret || sharedSecret !== env.WHOP_SHARED_SECRET) {
+      return NextResponse.json(
+        { ok: false, message: "Unauthorized webhook" },
+        { status: 401 }
+      );
+    }
+
     payload = await request.json();
 
     const parsed = parseWhopPayload(payload);
@@ -21,6 +31,14 @@ export async function POST(request: NextRequest) {
         { ok: false, message: "Missing event id" },
         { status: 400 }
       );
+    }
+
+    if (!parsed.productId || parsed.productId !== env.WHOP_PRODUCT_ID) {
+      return NextResponse.json({
+        ok: true,
+        ignored: true,
+        message: "Webhook ignored: product mismatch",
+      });
     }
 
     const existing = await findWebhookEventByWhopId(parsed.eventId);
