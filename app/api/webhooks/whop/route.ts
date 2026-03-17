@@ -13,14 +13,16 @@ export async function POST(request: NextRequest) {
   let payload: any = null;
 
   try {
-    const sharedSecret = request.headers.get("x-whop-shared-secret");
+    const webhookId = request.headers.get("webhook-id");
+    const webhookSignature = request.headers.get("webhook-signature");
+    const webhookTimestamp = request.headers.get("webhook-timestamp");
 
-    if (!sharedSecret || sharedSecret !== env.WHOP_SHARED_SECRET) {
-      return NextResponse.json(
-        { ok: false, message: "Unauthorized webhook" },
-        { status: 401 }
-      );
-    }
+if (!webhookId || !webhookSignature || !webhookTimestamp) {
+  return NextResponse.json(
+    { ok: false, message: "Missing Whop webhook headers" },
+    { status: 401 }
+  );
+}
 
     payload = await request.json();
 
