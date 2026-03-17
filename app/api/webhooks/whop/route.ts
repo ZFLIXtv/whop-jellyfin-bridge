@@ -122,6 +122,10 @@ if (!webhookId || !webhookSignature || !webhookTimestamp) {
     });
   } catch (error: any) {
     const parsed = payload ? parseWhopPayload(payload) : null;
+    console.log("WHOP RAW PAYLOAD:", JSON.stringify(payload, null, 2));
+console.log("WHOP PARSED:", parsed);
+console.log("WHOP_PRODUCT_ID_PAID:", env.WHOP_PRODUCT_ID_PAID);
+console.log("WHOP_PRODUCT_ID_TRIAL:", env.WHOP_PRODUCT_ID_TRIAL);
 
     if (parsed?.eventId) {
       await updateWebhookEventStatus({
