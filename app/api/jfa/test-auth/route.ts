@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { jfaClient } from "@/lib/jfa/client";
+import { jfaRequest } from "@/lib/jfa/client";
 
 export async function GET() {
   try {
-    const response = await jfaClient.get("/users");
+    const response = await jfaRequest({
+      method: "GET",
+      url: "/users",
+    });
 
     return NextResponse.json({
       ok: true,
       status: response.status,
-      dataType: Array.isArray(response.data) ? "array" : typeof response.data,
+      dataType: Array.isArray(response.data?.users) ? "users-array" : typeof response.data,
       sample:
-        Array.isArray(response.data) && response.data.length > 0
-          ? response.data[0]
+        Array.isArray(response.data?.users) && response.data.users.length > 0
+          ? response.data.users[0]
           : response.data,
     });
   } catch (error: any) {

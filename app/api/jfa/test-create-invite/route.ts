@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByName } from "@/lib/jfa/service";
+import { createInvite30Days } from "@/lib/jfa/service";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const name = request.nextUrl.searchParams.get("name");
+    const body = await request.json();
+    const email = body?.email;
 
-    if (!name) {
+    if (!email) {
       return NextResponse.json(
-        { ok: false, message: "Missing name query param" },
+        { ok: false, message: "Missing email" },
         { status: 400 }
       );
     }
 
-    const user = await findUserByName(name);
+    const data = await createInvite30Days(email);
 
     return NextResponse.json({
       ok: true,
-      found: !!user,
-      user,
+      data,
     });
   } catch (error: any) {
     return NextResponse.json(

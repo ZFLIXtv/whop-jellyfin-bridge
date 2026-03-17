@@ -1,6 +1,6 @@
-import { jfaClient } from "@/lib/jfa/client";
+import { jfaRequest } from "@/lib/jfa/client";
 
-type JfaUser = {
+export type JfaUser = {
   id: string;
   email?: string;
   name?: string;
@@ -14,16 +14,20 @@ type JfaUsersResponse = {
 };
 
 export async function getAllUsers(): Promise<JfaUser[]> {
-  const response = await jfaClient.get<JfaUsersResponse>("/users");
+  const response = await jfaRequest<JfaUsersResponse>({
+    method: "GET",
+    url: "/users",
+  });
+
   return response.data.users ?? [];
 }
 
-export async function findUserByEmail(email: string): Promise<JfaUser | null> {
+export async function findUserByName(name: string): Promise<JfaUser | null> {
   const users = await getAllUsers();
-  const normalized = email.trim().toLowerCase();
+  const normalized = name.trim().toLowerCase();
 
   const user = users.find(
-    (u) => (u.email || "").trim().toLowerCase() === normalized
+    (u) => (u.name || "").trim().toLowerCase() === normalized
   );
 
   return user ?? null;
@@ -31,7 +35,7 @@ export async function findUserByEmail(email: string): Promise<JfaUser | null> {
 
 export async function createInvite30Days(email: string) {
   const payload = {
-    days: 0,
+    days: 7,
     hours: 0,
     minutes: 0,
     months: 0,
@@ -49,7 +53,12 @@ export async function createInvite30Days(email: string) {
     label: "Whop Invite",
   };
 
-  const response = await jfaClient.post("/invites", payload);
+  const response = await jfaRequest({
+    method: "POST",
+    url: "/invites",
+    data: payload,
+  });
+
   return response.data;
 }
 
@@ -66,7 +75,12 @@ export async function extendUser30Days(userId: string) {
     users: [userId],
   };
 
-  const response = await jfaClient.post("/users/extend", payload);
+  const response = await jfaRequest({
+    method: "POST",
+    url: "/users/extend",
+    data: payload,
+  });
+
   return response.data;
 }
 
@@ -78,6 +92,11 @@ export async function enableUser(userId: string) {
     users: [userId],
   };
 
-  const response = await jfaClient.post("/users/enable", payload);
+  const response = await jfaRequest({
+    method: "POST",
+    url: "/users/enable",
+    data: payload,
+  });
+
   return response.data;
 }

@@ -5,7 +5,8 @@ export const env = {
   WHOP_PRODUCT_ID: process.env.WHOP_PRODUCT_ID || "",
   WHOP_CHECKOUT_URL: process.env.WHOP_CHECKOUT_URL || "",
   JFA_BASE_URL: process.env.JFA_BASE_URL || "",
-  JFA_API_KEY: process.env.JFA_API_KEY || "",
+  JFA_USERNAME: process.env.JFA_USERNAME || "",
+  JFA_PASSWORD: process.env.JFA_PASSWORD || "",
   ADMIN_API_KEY: process.env.ADMIN_API_KEY || "",
 };
 
@@ -17,7 +18,8 @@ export function assertEnv() {
     "WHOP_PRODUCT_ID",
     "WHOP_CHECKOUT_URL",
     "JFA_BASE_URL",
-    "JFA_API_KEY",
+    "JFA_USERNAME",
+    "JFA_PASSWORD",
     "ADMIN_API_KEY",
   ] as const;
 

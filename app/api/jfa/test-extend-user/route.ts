@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByName } from "@/lib/jfa/service";
+import { extendUser30Days } from "@/lib/jfa/service";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const name = request.nextUrl.searchParams.get("name");
+    const body = await request.json();
+    const userId = body?.userId;
 
-    if (!name) {
+    if (!userId) {
       return NextResponse.json(
-        { ok: false, message: "Missing name query param" },
+        { ok: false, message: "Missing userId" },
         { status: 400 }
       );
     }
 
-    const user = await findUserByName(name);
+    const data = await extendUser30Days(userId);
 
     return NextResponse.json({
       ok: true,
-      found: !!user,
-      user,
+      data,
     });
   } catch (error: any) {
     return NextResponse.json(
