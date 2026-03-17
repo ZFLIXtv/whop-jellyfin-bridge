@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processPayment } from "@/lib/billing-service";
+import { isAdminRequest } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json(
+      { ok: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
     const customerName = body?.customerName;
