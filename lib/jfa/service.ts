@@ -22,6 +22,20 @@ export async function getAllUsers(): Promise<JfaUser[]> {
   return response.data.users ?? [];
 }
 
+export async function findUserByIdentity(identity: string): Promise<JfaUser | null> {
+  const users = await getAllUsers();
+  const normalized = identity.trim().toLowerCase();
+
+  const user = users.find((u) => {
+    const name = (u.name || "").trim().toLowerCase();
+    const email = (u.email || "").trim().toLowerCase();
+
+    return name === normalized || email === normalized;
+  });
+
+  return user ?? null;
+}
+
 export async function findUserByName(name: string): Promise<JfaUser | null> {
   const users = await getAllUsers();
   const normalized = name.trim().toLowerCase();
@@ -31,6 +45,56 @@ export async function findUserByName(name: string): Promise<JfaUser | null> {
   );
 
   return user ?? null;
+}
+
+type JfaInvite = {
+  code?: string;
+  send_to?: string;
+  sent_to?: {
+    success?: string[];
+    failed?: { address?: string; reason?: string }[];
+  };
+  valid_till?: number;
+  used_by?: Record<string, number>;
+};
+
+type JfaInvitesResponse = {
+  invites: JfaInvite[];
+};
+
+export async function getAllInvites(): Promise<JfaInvite[]> {
+  const response = await jfaRequest<JfaInvitesResponse>({
+    method: "GET",
+    url: "/invites",
+  });
+
+  return response.data.invites ?? [];
+}
+
+export async function findActiveInviteByEmail(email: string): Promise<JfaInvite | null> {
+  const invites = await getAllInvites();
+  const normalized = email.trim().toLowerCase();
+  const now = Date.now();
+
+  const invite = invites.find((inv) => {
+    const deprecatedSendTo = (inv.send_to || "").trim().toLowerCase();
+
+    const sentToSuccess = (inv.sent_to?.success || []).map((x) =>
+      (x || "").trim().toLowerCase()
+    );
+
+    const matchesEmail =
+      deprecatedSendTo === normalized || sentToSuccess.includes(normalized);
+
+    const stillValid =
+      typeof inv.valid_till !== "number" || inv.valid_till === 0 || inv.valid_till > now;
+
+    const unused = !inv.used_by || Object.keys(inv.used_by).length === 0;
+
+    return matchesEmail && stillValid && unused;
+  });
+
+  return invite ?? null;
 }
 
 export async function createInvite30Days(email: string) {

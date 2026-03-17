@@ -5,7 +5,8 @@ import {
   createInvite5Days,
   enableUser,
   extendUser30Days,
-  findUserByName,
+  findActiveInviteByEmail,
+  findUserByIdentity,
 } from "@/lib/jfa/service";
 
 type ProcessPaymentInput = {
@@ -32,37 +33,11 @@ export async function processPayment(input: ProcessPaymentInput) {
     throw new Error("Unknown productId");
   }
 
-  const existingUser = await findUserByName(customerName);
+const existingUser = await findUserByIdentity(customerName);
 
   // CAS 1 — PRODUIT ESSAI GRATUIT
-  if (isTrial) {
-    // user déjà existant => on ignore, pas d'extend
-    if (existingUser) {
-      await db.query(
-        `
-        INSERT INTO action_logs (email, action, source_event_id, status, details)
-        VALUES ($1, $2, $3, $4, $5)
-        `,
-        [
-          customerName,
-          "trial_ignored_existing_user",
-          input.sourceEventId || null,
-          "success",
-          `Trial ignored because user already exists (${existingUser.id})`,
-        ]
-      );
-
-      return {
-        ok: true,
-        action: "trial_ignored_existing_user",
-        customerName,
-        userId: existingUser.id,
-      };
-    }
-
-    // user absent => invite 5 jours
-    const inviteResult = await createInvite5Days(customerName);
-
+ if (isTrial) {
+  if (existingUser) {
     await db.query(
       `
       INSERT INTO action_logs (email, action, source_event_id, status, details)
@@ -70,21 +45,69 @@ export async function processPayment(input: ProcessPaymentInput) {
       `,
       [
         customerName,
-        "invite_created_5_days",
+        "trial_ignored_existing_user",
         input.sourceEventId || null,
         "success",
-        "Created 5-day invite for trial customer",
+        `Trial ignored because user already exists (${existingUser.id})`,
       ]
     );
 
     return {
       ok: true,
-      action: "invite_created_5_days",
+      action: "trial_ignored_existing_user",
       customerName,
-      inviteResult,
+      userId: existingUser.id,
     };
   }
 
+  const existingInvite = await findActiveInviteByEmail(customerName);
+
+  if (existingInvite) {
+    await db.query(
+      `
+      INSERT INTO action_logs (email, action, source_event_id, status, details)
+      VALUES ($1, $2, $3, $4, $5)
+      `,
+      [
+        customerName,
+        "trial_ignored_existing_invite",
+        input.sourceEventId || null,
+        "success",
+        `Trial ignored because active invite already exists (${existingInvite.code || "no-code"})`,
+      ]
+    );
+
+    return {
+      ok: true,
+      action: "trial_ignored_existing_invite",
+      customerName,
+      inviteCode: existingInvite.code || null,
+    };
+  }
+
+  const inviteResult = await createInvite5Days(customerName);
+
+  await db.query(
+    `
+    INSERT INTO action_logs (email, action, source_event_id, status, details)
+    VALUES ($1, $2, $3, $4, $5)
+    `,
+    [
+      customerName,
+      "invite_created_5_days",
+      input.sourceEventId || null,
+      "success",
+      "Created 5-day invite for trial customer",
+    ]
+  );
+
+  return {
+    ok: true,
+    action: "invite_created_5_days",
+    customerName,
+    inviteResult,
+  };
+}
   // CAS 2 — PRODUIT PAYANT
   if (!existingUser) {
     const inviteResult = await createInvite30Days(customerName);
