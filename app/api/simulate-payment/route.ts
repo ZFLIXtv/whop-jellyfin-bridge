@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const customerName = body?.customerName;
+    const productId = body?.productId;
 
     if (!customerName) {
       return NextResponse.json(
@@ -21,8 +22,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!productId) {
+      return NextResponse.json(
+        { ok: false, message: "Missing productId" },
+        { status: 400 }
+      );
+    }
+
     const result = await processPayment({
       customerName,
+      productId,
       sourceEventId: "manual-test",
     });
 

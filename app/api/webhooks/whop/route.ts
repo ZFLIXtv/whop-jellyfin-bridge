@@ -33,7 +33,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!parsed.productId || parsed.productId !== env.WHOP_PRODUCT_ID) {
+    const allowedProductIds = [
+      env.WHOP_PRODUCT_ID_PAID,
+      env.WHOP_PRODUCT_ID_TRIAL,
+    ];
+
+    if (!parsed.productId || !allowedProductIds.includes(parsed.productId)) {
       return NextResponse.json({
         ok: true,
         ignored: true,
@@ -73,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     const result = await processPayment({
       customerName: parsed.customerName,
+      productId: parsed.productId,
       sourceEventId: parsed.eventId,
     });
 

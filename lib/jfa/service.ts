@@ -62,6 +62,35 @@ export async function createInvite30Days(email: string) {
   return response.data;
 }
 
+export async function createInvite5Days(email: string) {
+  const payload = {
+    days: 7,
+    hours: 0,
+    minutes: 0,
+    months: 0,
+    "multiple-uses": false,
+    "no-limit": false,
+    profile: "DefaultProfile",
+    "remaining-uses": 1,
+    "send-to": email,
+    "user-days": 5,
+    "user-expiry": true,
+    "user-hours": 0,
+    "user-minutes": 0,
+    "user-months": 0,
+    user_label: "Whop Trial",
+    label: "Whop Trial Invite",
+  };
+
+  const response = await jfaRequest({
+    method: "POST",
+    url: "/invites",
+    data: payload,
+  });
+
+  return response.data;
+}
+
 export async function extendUser30Days(userId: string) {
   const payload = {
     days: 30,
@@ -70,6 +99,28 @@ export async function extendUser30Days(userId: string) {
     months: 0,
     notify: true,
     reason: "Whop payment renewal",
+    timestamp: 0,
+    try_extend_from_previous_expiry: true,
+    users: [userId],
+  };
+
+  const response = await jfaRequest({
+    method: "POST",
+    url: "/users/extend",
+    data: payload,
+  });
+
+  return response.data;
+}
+
+export async function extendUser5Days(userId: string) {
+  const payload = {
+    days: 5,
+    hours: 0,
+    minutes: 0,
+    months: 0,
+    notify: true,
+    reason: "Whop free trial",
     timestamp: 0,
     try_extend_from_previous_expiry: true,
     users: [userId],

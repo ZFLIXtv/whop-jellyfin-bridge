@@ -10,8 +10,8 @@ async function loginAndGetToken(): Promise<string> {
     `${env.JFA_USERNAME}:${env.JFA_PASSWORD}`
   ).toString("base64");
 
-const response = await axios.get(`${JFA_BASE_URL}/token/login`, {
-        headers: {
+  const response = await axios.get(`${JFA_BASE_URL}/token/login`, {
+    headers: {
       Authorization: `Basic ${basicAuth}`,
     },
     timeout: 15000,
@@ -57,7 +57,7 @@ export async function jfaRequest<T = any>(
       const refreshedToken = await loginAndGetToken();
 
       return axios.request<T>({
-        baseURL: env.JFA_BASE_URL,
+        baseURL: JFA_BASE_URL,
         timeout: 15000,
         ...config,
         headers: {
