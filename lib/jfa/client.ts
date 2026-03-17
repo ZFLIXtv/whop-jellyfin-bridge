@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { env } from "@/lib/env";
 
+const JFA_BASE_URL = env.JFA_BASE_URL.replace(/\/+$/, "");
+
 let cachedToken: string | null = null;
 
 async function loginAndGetToken(): Promise<string> {
@@ -8,8 +10,8 @@ async function loginAndGetToken(): Promise<string> {
     `${env.JFA_USERNAME}:${env.JFA_PASSWORD}`
   ).toString("base64");
 
-  const response = await axios.get(`${env.JFA_BASE_URL}/token/login`, {
-    headers: {
+const response = await axios.get(`${JFA_BASE_URL}/token/login`, {
+        headers: {
       Authorization: `Basic ${basicAuth}`,
     },
     timeout: 15000,
@@ -38,7 +40,7 @@ export async function jfaRequest<T = any>(
 
   try {
     return await axios.request<T>({
-      baseURL: env.JFA_BASE_URL,
+      baseURL: JFA_BASE_URL,
       timeout: 15000,
       ...config,
       headers: {
