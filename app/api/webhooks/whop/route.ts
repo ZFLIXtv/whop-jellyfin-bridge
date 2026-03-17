@@ -35,18 +35,27 @@ if (!webhookId || !webhookSignature || !webhookTimestamp) {
       );
     }
 
-    const allowedProductIds = [
-      env.WHOP_PRODUCT_ID_PAID,
-      env.WHOP_PRODUCT_ID_TRIAL,
-    ];
+const allowedProductIds = [
+  env.WHOP_PRODUCT_ID_PAID,
+  env.WHOP_PRODUCT_ID_TRIAL,
+];
 
-    if (!parsed.productId || !allowedProductIds.includes(parsed.productId)) {
-      return NextResponse.json({
-        ok: true,
-        ignored: true,
-        message: "Webhook ignored: product mismatch",
-      });
-    }
+if (!parsed.productId || !allowedProductIds.includes(parsed.productId)) {
+  return NextResponse.json({
+    ok: true,
+    ignored: true,
+    message: "Webhook ignored: product mismatch",
+    debug: {
+      parsedProductId: parsed.productId,
+      paidProductId: env.WHOP_PRODUCT_ID_PAID,
+      trialProductId: env.WHOP_PRODUCT_ID_TRIAL,
+      eventType: parsed.eventType,
+      payloadKeys: Object.keys(payload || {}),
+      dataKeys: Object.keys(payload?.data || {}),
+      data: payload?.data || null,
+    },
+  });
+}
 
     const existing = await findWebhookEventByWhopId(parsed.eventId);
 
