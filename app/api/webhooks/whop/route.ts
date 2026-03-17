@@ -27,6 +27,15 @@ if (!webhookId || !webhookSignature || !webhookTimestamp) {
     payload = await request.json();
 
     const parsed = parseWhopPayload(payload);
+    const allowedEventTypes = ["payment.succeeded"];
+
+if (!allowedEventTypes.includes(parsed.eventType)) {
+  return NextResponse.json({
+    ok: true,
+    ignored: true,
+    message: `Webhook ignored: unsupported event type ${parsed.eventType}`,
+  });
+}
 
     if (!parsed.eventId) {
       return NextResponse.json(
@@ -39,6 +48,8 @@ const allowedProductIds = [
   env.WHOP_PRODUCT_ID_PAID,
   env.WHOP_PRODUCT_ID_TRIAL,
 ];
+
+
 
 if (!parsed.productId || !allowedProductIds.includes(parsed.productId)) {
   return NextResponse.json({
@@ -86,6 +97,25 @@ if (!parsed.productId || !allowedProductIds.includes(parsed.productId)) {
         { status: 400 }
       );
     }
+    if (parsed.paymentId) {
+  const existingPayment = await db.query(
+    `
+    SELECT id
+    FROM payments
+    WHERE whop_payment_id = $1
+    LIMIT 1
+    `,
+    [parsed.paymentId]
+  );
+
+  if (existingPayment.rows.length > 0) {
+    return NextResponse.json({
+      ok: true,
+      duplicate: true,
+      message: "Payment already processed",
+    });
+  }
+}
 
     const result = await processPayment({
       customerName: parsed.customerName,
